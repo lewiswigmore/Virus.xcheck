@@ -1,39 +1,56 @@
-# Virus.xcheck
+```
+██╗   ██╗██╗██████╗ ██╗   ██╗███████╗   ██╗  ██╗ ██████╗██╗  ██╗███████╗ ██████╗██╗  ██╗
+██║   ██║██║██╔══██╗██║   ██║██╔════╝   ╚██╗██╔╝██╔════╝██║  ██║██╔════╝██╔════╝██║ ██╔╝
+██║   ██║██║██████╔╝██║   ██║███████╗    ╚███╔╝ ██║     ███████║█████╗  ██║     █████╔╝ 
+╚██╗ ██╔╝██║██╔══██╗██║   ██║╚════██║    ██╔██╗ ██║     ██╔══██║██╔══╝  ██║     ██╔═██╗ 
+ ╚████╔╝ ██║██║  ██║╚██████╔╝███████║██╗██╔╝ ██╗╚██████╗██║  ██║███████╗╚██████╗██║  ██╗
+  ╚═══╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝
+```
 
 ## Overview
-Virus.xcheck is a Python tool designed to verify the existence of file hashes in the Virus Exchange database. It reads a list of hashes from a CSV file and checks each hash against a specified URL. If a file corresponding to the hash exists, the URL is returned; otherwise, it's indicated that the file was not found.
+Virus.xcheck is a Python tool that verifies the existence of file hashes in the Virus Exchange database. It supports MD5, SHA1, SHA256, and SHA512 hashes. The tool can read hashes from a CSV file or a single hash from the command line, checking each against the Virus Exchange database.
 
 ## Features
-- Reads hashes from a CSV file.
-- Checks each hash against Virus.exchange server.
-- Supports large sets of hashes.
-- Outputs the results in JSON format.
+- Reads hashes from a CSV file or a single hash from the command line.
+- Checks each hash against the Virus Exchange database.
+- Supports MD5, SHA1, SHA256, and SHA512 hashes.
+- Parallel processing for efficient handling of larger files.
+- Outputs the results in JSON or CSV format.
+- Command-line interface with multiple usage options.
 
 ## Requirements
 - Python 3
-- `requests` library
+- Libraries: `requests`, `tqdm`
 
 ## Installation
-Before running the script, ensure you have Python 3 installed on your system. You also need to install the `requests` library, which can be done using pip:
+Ensure Python 3 is installed on your system. Install the required libraries using pip:
 
-```bash
-pip install requests
+```
+pip install requests tqdm
 ```
 
 ## Usage
-To use Virus.xcheck, you need to have a CSV file containing the hashes to check. The script is executed from the command line with the following format:
+Execute the script from the command line with the following format:
 
-```bash
+```
 python virusxcheck.py -f /path/to/your/hashes.csv
+```
+
+Or, to check a single hash:
+
+```
+python virusxcheck.py -s "hash_value"
 ```
 
 ### Arguments
 - `-f` or `--file`: Path to the CSV file containing hashes.
+- `-o` or `--output`: Path to the output file (CSV or JSON format).
+- `-s` or `--single`: Single hash string to check.
 
-## Output
-The tool outputs the results in JSON format, where each hash is mapped to its status ('Found' or 'Not Found') and the corresponding URL if found.
+### Output
+The tool outputs the results in either JSON or CSV format, where each hash is mapped to its status ('Found' or 'Not Found') and the corresponding download URL if found.
 
-Example output:
+Example output (JSON):
 
 ```json
 {

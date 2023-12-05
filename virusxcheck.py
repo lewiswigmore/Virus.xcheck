@@ -17,6 +17,7 @@ import json
 import re
 import concurrent.futures
 from tqdm import tqdm
+from ratelimit import limits, sleep_and_retry
 
 def read_csv(file_path):
     hashes = []
@@ -37,6 +38,9 @@ def read_csv(file_path):
         print(f"An error occurred while reading the file: {e}")
         exit(1)
 
+# Define the rate limit: 15 request per 1 seconds
+@sleep_and_retry
+@limits(calls=15, period=1)
 def check_hash(hash_value, session):
     if len(hash_value) not in [32, 40, 64, 128]:
         return "Unsupported hash length"
@@ -76,23 +80,27 @@ def main():
         parser.print_help()  # Print help message
         sys.exit(1)  # Exit the script
 
-    # Handling single hash string
-    if args.single:
-        with requests.Session() as session:
-            results = {args.single: check_hash(args.single, session)}
-    elif args.file:
-        hash_values = read_csv(args.file)
-        results = {}
-        with requests.Session() as session:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                # Create a tqdm progress bar
-                tasks = {executor.submit(check_hash, hash_value, session): hash_value for hash_value in hash_values}
-                for future in tqdm(concurrent.futures.as_completed(tasks), total=len(tasks), desc="Processing"):
-                    hash_value = tasks[future]
-                    results[hash_value] = future.result()
-    else:
-        print("Error: Please provide a hash string or a path to a CSV file containing hashes.")
-        exit(1)
+    try:
+        # Handling single hash string
+        if args.single:
+            with requests.Session() as session:
+                results = {args.single: check_hash(args.single, session)}
+        elif args.file:
+            hash_values = read_csv(args.file)
+            results = {}
+            with requests.Session() as session:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                    # Create a tqdm progress bar
+                    tasks = {executor.submit(check_hash, hash_value, session): hash_value for hash_value in hash_values}
+                    for future in tqdm(concurrent.futures.as_completed(tasks), total=len(tasks), desc="Processing"):
+                        hash_value = tasks[future]
+                        results[hash_value] = future.result()
+        else:
+            print("Error: Please provide a hash string or a path to a CSV file containing hashes.")
+            exit(1)
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user. Exiting.")
+        sys.exit(0)
 
     # Output results
     if args.output:

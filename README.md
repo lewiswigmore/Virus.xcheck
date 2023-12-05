@@ -17,16 +17,17 @@ Virus.xcheck is a Python tool that verifies the existence of file hashes in the 
 - Parallel processing for efficient handling of larger files.
 - Outputs the results in JSON or CSV format.
 - Command-line interface with multiple usage options.
+- Checks are rate limited to 15 requests per second.
 
 ## Requirements
 - Python 3
-- Libraries: `requests`, `tqdm`
+- Libraries: `requests`, `tqdm`, `ratelimit`
 
 ## Installation
 Ensure Python 3 is installed on your system. Install the required libraries using pip:
 
 ```
-pip install requests tqdm
+pip install requests tqdm ratelimit
 ```
 
 ## Usage

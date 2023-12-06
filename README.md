@@ -31,13 +31,25 @@ pip install requests tqdm ratelimit
 ```
 
 ## Usage
+Getting started and usage guide:
+
+```
+python .\virusxcheck.py
+```
+
 Execute the script from the command line with the following format:
 
 ```
 python virusxcheck.py -f /path/to/your/hashes.csv
 ```
 
-Or, to check a single hash:
+To save the output in a custom-named CSV file:
+
+```
+python virusxcheck.py -f /path/to/hashes.csv -o /path/to/custom_output.csv
+```
+
+To check a single hash:
 
 ```
 python virusxcheck.py -s "hash_value"
@@ -50,6 +62,10 @@ python virusxcheck.py -s "hash_value"
 
 ### Output
 The tool outputs the results in either JSON or CSV format, where each hash is mapped to its status ('Found' or 'Not Found') and the corresponding download URL if found.
+
+You can specify the output format (JSON or CSV) using the -o option followed by the desired file extension:
+- JSON: `-o output.json`
+- CSV: `-o output.csv`
 
 Example output (JSON):
 

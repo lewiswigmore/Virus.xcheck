@@ -26,26 +26,34 @@ Virus.xcheck is a Python tool that verifies the existence of file hashes in the 
 ## Installation
 Ensure Python 3 is installed on your system. Install the required libraries using pip:
 
-```
+```bash
 pip install requests tqdm ratelimit
 ```
 
 ## Usage
 Getting started and usage guide:
 
-`python virusxcheck.py`
+```bash
+python virusxcheck.py
+```
 
 Execute the script from the command line with the following format:
 
-`python virusxcheck.py -f /path/to/your/hashes.csv`
+```bash
+python virusxcheck.py -f /path/to/your/hashes.csv
+```
 
 To save the output in a custom-named CSV file:
 
-`python virusxcheck.py -f /path/to/hashes.csv -o /path/to/custom_output.csv`
+```bash
+python virusxcheck.py -f /path/to/hashes.csv -o /path/to/custom_output.csv
+```
 
 To check a single hash:
 
-`python virusxcheck.py -s "hash_value"`
+```bash
+python virusxcheck.py -s "hash_value"
+```
 
 ### Arguments
 - `-f` or `--file`: Path to the CSV file containing hashes.

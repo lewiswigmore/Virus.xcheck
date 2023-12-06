@@ -33,27 +33,19 @@ pip install requests tqdm ratelimit
 ## Usage
 Getting started and usage guide:
 
-```
-python .\virusxcheck.py
-```
+`python virusxcheck.py`
 
 Execute the script from the command line with the following format:
 
-```
-python virusxcheck.py -f /path/to/your/hashes.csv
-```
+`python virusxcheck.py -f /path/to/your/hashes.csv`
 
 To save the output in a custom-named CSV file:
 
-```
-python virusxcheck.py -f /path/to/hashes.csv -o /path/to/custom_output.csv
-```
+`python virusxcheck.py -f /path/to/hashes.csv -o /path/to/custom_output.csv`
 
 To check a single hash:
 
-```
-python virusxcheck.py -s "hash_value"
-```
+`python virusxcheck.py -s "hash_value"`
 
 ### Arguments
 - `-f` or `--file`: Path to the CSV file containing hashes.

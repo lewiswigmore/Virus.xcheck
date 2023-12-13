@@ -43,25 +43,28 @@ def read_csv(file_path):
 @limits(calls=15, period=1)
 def check_hash(hash_value, session):
     if len(hash_value) not in [32, 40, 64, 128]:
-        return "Unsupported hash length"
-    url = f"https://s3.us-east-1.wasabisys.com/vxugmwdb/{hash_value}"
+        return {"status": "Unsupported hash length", "vx_url": None, "virustotal_url": None}
+
+    vx_url = f"https://s3.us-east-1.wasabisys.com/vxugmwdb/{hash_value}"
+    virustotal_url = f"https://www.virustotal.com/gui/file/{hash_value}"
+
     try:
-        response = session.head(url)
+        response = session.head(vx_url)
         if response.status_code == 200:
-            return url
+            return {"status": "Found in VX database", "vx_url": vx_url, "virustotal_url": virustotal_url}
         elif response.status_code == 404:
-            return "Not Found"
+            return {"status": "Not found in VX database", "virustotal_url": virustotal_url}
         else:
-            return f"Error: HTTP {response.status_code}"
+            return {"status": f"Error: HTTP {response.status_code}", "vx_url": None, "virustotal_url": virustotal_url}
     except requests.RequestException as e:
-        return f"Request Error: {e}"
+        return {"status": f"Request Error: {e}", "virustotal_url": virustotal_url}
 
 def write_to_csv(file_path, data):
     with open(file_path, 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        writer.writerow(['Hash', 'URL', 'Status'])
+        writer.writerow(['Hash', 'VX Status', 'VX URL', 'VirusTotal URL'])
         for hash_value, details in data.items():
-            writer.writerow([hash_value, details.get('url', ''), details['status']])
+            writer.writerow([hash_value, details['status'], details.get('vx_url', 'Not available'), details['virustotal_url']])
 
 def write_to_json(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as f:

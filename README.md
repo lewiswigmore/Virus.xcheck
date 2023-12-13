@@ -78,7 +78,7 @@ Example output (JSON):
     "199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42": {
         "status": "Found in VX database",
         "vx_url": "https://s3.us-east-1.wasabisys.com/vxugmwdb/199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42",       
-        "virustotal_url": "https://www.virustotal.com/gui/file/199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42
+        "virustotal_url": "https://www.virustotal.com/gui/file/199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42"
     }
 }
 ```

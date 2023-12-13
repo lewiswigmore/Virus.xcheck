@@ -71,12 +71,14 @@ Example output (JSON):
 
 ```json
 {
-    "199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42": {
-        "url": "https://s3.us-east-1.wasabisys.com/vxugmwdb/199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42",
-        "status": "Found"
+    "123ab456c7891011d1213e14f1g516h1718i1jk9202mn12223o2p42qe5s26t27": {
+        "status": "Not found in VX database",
+        "virustotal_url": "https://www.virustotal.com/gui/file/123ab456c7891011d1213e14f1g516h1718i1jk9202mn12223o2p42qe5s26t2"        
     },
-    "anotherhashvalue": {
-        "status": "Not Found"
+    "199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42": {
+        "status": "Found in VX database",
+        "vx_url": "https://s3.us-east-1.wasabisys.com/vxugmwdb/199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42",       
+        "virustotal_url": "https://www.virustotal.com/gui/file/199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42
     }
 }
 ```

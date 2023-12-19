@@ -6,9 +6,9 @@
  ╚████╔╝ ██║██║  ██║╚██████╔╝███████║██╗██╔╝ ██╗╚██████╗██║  ██║███████╗╚██████╗██║  ██╗
   ╚═══╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝
 ```
-<p align="center">
+<p align="left">
       <a href="https://github.com/lewiswigmore"><img src="https://img.shields.io/badge/GitHub-Follow%20on%20GitHub-inactive.svg?logo=github"></a>
-      <a href="https://twitter.com/LewSecurity"><img src="https://img.shields.io/badge/Twitter-Follow%20on%20Twitter-informational.svg?logo=twitter"></a>
+      <a href="https://twitter.com/LewSecurity"><img src="https://img.shields.io/badge/Twitter-Follow%20on%20Twitter-informational.svg?logo=x"></a>
 </p>
  
 ## Overview

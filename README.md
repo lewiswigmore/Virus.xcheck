@@ -6,7 +6,12 @@
  ╚████╔╝ ██║██║  ██║╚██████╔╝███████║██╗██╔╝ ██╗╚██████╗██║  ██║███████╗╚██████╗██║  ██╗
   ╚═══╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝
 ```
-
+## Follow on:
+<p align="center">
+      <a href="https://github.com/lewiswigmore"><img src="https://img.shields.io/badge/GitHub-Follow%20on%20GitHub-inactive.svg?logo=github"></a>
+      <a href="https://twitter.com/LewSecurity"><img src="https://img.shields.io/badge/Twitter-Follow%20on%20Twitter-informational.svg?logo=twitter"></a>
+</p>
+ 
 ## Overview
 Virus.xcheck is a Python tool that verifies the existence of file hashes in the Virus Exchange database. It supports MD5, SHA1, SHA256, and SHA512 hashes. The tool can read hashes from a CSV file or a single hash from the command line, checking each against the Virus Exchange database.
 

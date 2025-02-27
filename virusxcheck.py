@@ -21,7 +21,7 @@ from ratelimit import limits, sleep_and_retry
 
 def read_csv(file_path):
     hashes = []
-    hex_pattern = re.compile(r'\b[a-fA-F0-9]{32,128}\b')  # Regex pattern for MD5, SHA1, SHA256, SHA512
+    hex_pattern = re.compile(r'\b[a-fA-F0-9]{64}\b')  # Regex pattern for MD5, SHA1, SHA256, SHA512
     try:
         with open(file_path, mode='r', newline='', encoding='utf-8') as file:
             reader = csv.reader(file)
@@ -42,22 +42,31 @@ def read_csv(file_path):
 @sleep_and_retry
 @limits(calls=15, period=1)
 def check_hash(hash_value, session):
-    if len(hash_value) not in [32, 40, 64, 128]:
-        return {"status": "Unsupported hash length", "vx_url": None, "virustotal_url": None}
+    # Validate hash length and type
+    if len(hash_value) == 64:  # SHA-256
+        vx_url = f"https://s3.us-east-1.wasabisys.com/vxugmwdb/{hash_value}"
+        virustotal_url = f"https://www.virustotal.com/gui/file/{hash_value}"
+        
+        try:
+            response = session.head(vx_url)
+            if response.status_code == 200:
+                return {"status": "Found in VX database", "vx_url": vx_url, "virustotal_url": virustotal_url}
+            elif response.status_code == 404:
+                return {"status": "Not found in VX database", "virustotal_url": virustotal_url}
+            else:
+                return {"status": f"Error: HTTP {response.status_code}", "vx_url": None, "virustotal_url": virustotal_url}
+        except requests.RequestException as e:
+            return {"status": f"Request Error: {e}", "virustotal_url": virustotal_url}
+    
+    # For other hash types (MD5, SHA-1, SHA-512)
+    elif len(hash_value) in [32, 40, 128]:  # MD5, SHA-1, or SHA-512 (assuming 128 for SHA-512)
+        virustotal_url = f"https://www.virustotal.com/gui/file/{hash_value}"
+        return {"status": "Hash type not supported in VX database", "vx_url": None, "virustotal_url": virustotal_url}
+    
+    # If hash length doesn't match known formats
+    else:
+        return {"status": "Invalid hash length", "vx_url": None, "virustotal_url": None}
 
-    vx_url = f"https://s3.us-east-1.wasabisys.com/vxugmwdb/{hash_value}"
-    virustotal_url = f"https://www.virustotal.com/gui/file/{hash_value}"
-
-    try:
-        response = session.head(vx_url)
-        if response.status_code == 200:
-            return {"status": "Found in VX database", "vx_url": vx_url, "virustotal_url": virustotal_url}
-        elif response.status_code == 404:
-            return {"status": "Not found in VX database", "virustotal_url": virustotal_url}
-        else:
-            return {"status": f"Error: HTTP {response.status_code}", "vx_url": None, "virustotal_url": virustotal_url}
-    except requests.RequestException as e:
-        return {"status": f"Request Error: {e}", "virustotal_url": virustotal_url}
 
 def write_to_csv(file_path, data):
     with open(file_path, 'w', newline='', encoding='utf-8') as file:

@@ -12,13 +12,12 @@
 </p>
  
 ## Overview
-Virus.xcheck is a Python tool that verifies the existence of file hashes in the Virus Exchange database. It supports MD5, SHA1, SHA256, and SHA512 hashes. The tool can read hashes from a CSV file or a single hash from the command line, checking each against the Virus Exchange database.
+Virus.xcheck is a Python tool designed to check the existence of file hashes in the Virus Exchange database. Due to the storage method used by Virus Exchange, only SHA-256 hashes are supported. However, for other hash types, the tool will return a VirusTotal URL. The tool can read SHA-256 hashes from a CSV file or accept a single hash from the command line, verifying each one against the Virus Exchange database.
 
 ## Features
 - Reads hashes from a CSV file or a single hash from the command line.
 - Checks each hash against the Virus Exchange database.
-- Supports MD5, SHA1, SHA256, and SHA512 hashes.
-- Parallel processing for efficient handling of larger files.
+- Parallel processing for handling of larger files.
 - Outputs the results in JSON or CSV format.
 - Command-line interface with multiple usage options.
 - Checks are rate limited to 15 requests per second.

@@ -53,6 +53,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 20px;
+        }
+        .chart-full {
+            grid-column: span 1;
+        }
         .result-item {
             background-color: white;
             padding: 20px;
@@ -127,6 +135,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             font-size: 0.9em;
             margin-top: 5px;
         }
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-full {
+                grid-column: span 1;
+            }
+        }
     </style>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
@@ -160,7 +176,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
         </div>
         
-        <div class="chart-container">
+        <div class="chart-container chart-full">
             <h2>Detection Overview</h2>
             <p class="section-description">
                 This chart shows the detection results for each analysed hash, with stacked bars indicating malicious, suspicious, and clean verdicts
@@ -170,36 +186,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <div id="detection_chart" style="width: 100%; height: 400px;"></div>
         </div>
         
-        <div class="chart-container">
+        <div class="chart-container chart-full">
             <h2>Detection Distribution</h2>
             <p class="section-description">
-                This histogram shows the distribution of detection rates across all analysed samples. The x-axis represents detection rate percentages,
-                while the y-axis shows how many samples fall into each detection rate range. A higher concentration in the rightmost bars indicates
-                most samples have high detection rates, suggesting greater confidence in the malware classification.
+                This gauge chart visualizes the average malware detection rate across all samples. The needle position and color zones 
+                indicate confidence levels in malicious classification (green: low, yellow: medium, orange: high, red: very high).
+                The threshold line shows the maximum detection rate in your dataset.
             </p>
-            <div id="distribution_chart" style="width: 100%; height: 400px;"></div>
+            <div id="distribution_chart" style="width: 100%; height: 450px;"></div>
         </div>
         
-        <div class="chart-container">
-            <h2>Sample Timeline</h2>
-            <p class="section-description">
-                This timeline chart visualises when malware samples were first observed. Clustering of samples around specific dates may indicate
-                malware campaigns or related variants. Each point represents a sample's first submission date to VirusTotal or when it was first seen in
-                the Virus.Exchange database.
-            </p>
-            <div id="timeline_chart" style="width: 100%; height: 400px;"></div>
-        </div>
-
         {% if most_common_tags %}
-        <div class="chart-container">
+        <div class="chart-container chart-full">
             <h2>Common Malware Tags</h2>
             <p class="section-description">
-                This chart displays the most frequently occurring malware tags across all analysed samples. These tags indicate specific
-                behaviours, techniques, or classifications identified by VirusTotal's analysis engines. Common tags like "trojan", "backdoor",
-                or "ransomware" help classify the type of threats in your dataset. Tags like "keylogger" or "infostealer" indicate
-                specific malicious capabilities.
+                This chart displays the most frequently occurring malware tags across all samples. These tags indicate specific
+                behaviors, techniques, or classifications identified by analysis engines. Common tags like "trojan", "backdoor",
+                or "ransomware" help classify the type of threats in your dataset.
             </p>
-            <div id="tags_chart" style="width: 100%; height: 400px;"></div>
+            <div id="tags_chart" style="width: 100%; height: 450px;"></div>
         </div>
         {% endif %}
         
@@ -299,7 +304,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     
     {{ detection_chart_js|safe }}
     {{ distribution_chart_js|safe }}
-    {{ timeline_chart_js|safe }}
     {{ tags_chart_js|safe }}
 </body>
 </html>"""
@@ -429,7 +433,7 @@ class HTMLReporter:
         return chart_js
     
     def create_distribution_chart(self, results):
-        """Create a distribution chart for detection rates"""
+        """Create a gauge chart for detection rates distribution, providing better visualization of malicious presence"""
         detection_rates = []
         
         # Extract detection rates
@@ -446,22 +450,78 @@ class HTMLReporter:
         
         if not detection_rates:
             return "document.getElementById('distribution_chart').innerHTML = 'No detection data available';"
+            
+        # Calculate average detection rate and other statistics
+        avg_detection_rate = sum(detection_rates) / len(detection_rates) if detection_rates else 0
+        max_detection_rate = max(detection_rates) if detection_rates else 0
+        min_detection_rate = min(detection_rates) if detection_rates else 0
         
-        # Create a histogram
-        fig = go.Figure()
-        
-        fig.add_trace(go.Histogram(
-            x=detection_rates,
-            nbinsx=10,
-            marker_color='#3498db',
-            opacity=0.7
+        # Create a gauge chart showing average detection rate with reduced spacing
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=avg_detection_rate,
+            title={
+                "text": "Average Detection Rate",
+                "font": {"size": 20},
+                "align": "center"
+            },
+            number={
+                "font": {"size": 40, "color": "#e74c3c" if avg_detection_rate > 50 else "#f39c12"},
+                "suffix": "%", 
+                "valueformat": ".1f"  # Format to 1 decimal place
+            },
+            gauge={
+                "axis": {"range": [0, 100], "tickwidth": 1, "tickfont": {"size": 14}},
+                "bar": {"color": "#e74c3c" if avg_detection_rate > 50 else "#f39c12"},
+                "bgcolor": "white",
+                "borderwidth": 2,
+                "bordercolor": "gray",
+                "steps": [
+                    {"range": [0, 25], "color": "#2ecc71"},  # Green for low detection
+                    {"range": [25, 50], "color": "#f1c40f"},  # Yellow for medium detection
+                    {"range": [50, 75], "color": "#f39c12"},  # Orange for high detection
+                    {"range": [75, 100], "color": "#e74c3c"}   # Red for very high detection
+                ],
+                "threshold": {
+                    "line": {"color": "darkred", "width": 4},
+                    "thickness": 0.75,
+                    "value": max_detection_rate
+                },
+                "shape": "angular"
+            },
+            domain={"y": [0.1, 1], "x": [0.1, 0.9]}  # Adjust vertical positioning to reduce space
         ))
         
+        # Create single interpretation with stats included
+        if avg_detection_rate < 25:
+            risk_level = "Low risk"
+        elif avg_detection_rate < 50:
+            risk_level = "Medium risk"
+        elif avg_detection_rate < 75:
+            risk_level = "High risk"
+        else:
+            risk_level = "Critical risk"
+            
+        # Combined stats and interpretation in a single annotation
+        combined_text = f"{risk_level} • Min: {min_detection_rate:.1f}% • Max: {max_detection_rate:.1f}% • Samples: {len(detection_rates)}"
+        
+        # Add as a subtitle below gauge
         fig.update_layout(
-            title='Distribution of Detection Rates',
-            xaxis_title='Detection Rate (%)',
-            yaxis_title='Frequency',
-            margin=dict(l=50, r=50, t=80, b=50)
+            annotations=[
+                dict(
+                    x=0.5,
+                    y=0,  # Position at bottom of chart
+                    xref="paper",
+                    yref="paper",
+                    text=combined_text,
+                    showarrow=False,
+                    font=dict(size=14, color="#333"),
+                    bgcolor="rgba(255, 255, 255, 0.8)",
+                    borderpad=4
+                )
+            ],
+            margin=dict(l=30, r=30, t=50, b=80),  # Reduced top margin
+            height=450  # Slightly reduced height to compact elements
         )
         
         # Convert to HTML
@@ -469,138 +529,6 @@ class HTMLReporter:
         <script>
             var distribution_data = {pio.to_json(fig)};
             Plotly.newPlot('distribution_chart', distribution_data.data, distribution_data.layout);
-        </script>
-        """
-        
-        return chart_js
-    
-    def create_timeline_chart(self, results):
-        """Create a timeline chart for sample submission dates"""
-        timeline_data = []
-        
-        # Parse dates from results
-        for hash_value, details in results.items():
-            submission_date = None
-            short_hash = hash_value[:8] + '...'
-            
-            # Try to get date from VirusTotal data
-            if 'vt_data' in details and details['vt_data'] and 'first_submission_date' in details['vt_data']:
-                try:
-                    date_str = details['vt_data']['first_submission_date']
-                    submission_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-                    source = 'VirusTotal'
-                except (ValueError, TypeError):
-                    pass
-            
-            # Fallback to VX database date if available
-            if submission_date is None and 'details' in details and details['details'] and 'first_seen' in details['details']:
-                try:
-                    date_str = details['details']['first_seen']
-                    if 'T' in date_str:
-                        # Handle ISO format like "2025-03-30T18:28:54Z"
-                        submission_date = datetime.strptime(date_str.split('T')[0], '%Y-%m-%d')
-                    else:
-                        submission_date = datetime.strptime(date_str, '%Y-%m-%d')
-                    source = 'Virus.Exchange'
-                except (ValueError, TypeError):
-                    pass
-            
-            # Add to timeline if we found a date
-            if submission_date:
-                # Determine color based on malicious/clean status
-                if 'Found in VX database' in details['status']:
-                    color = '#e74c3c'  # Red for malicious
-                else:
-                    color = '#2ecc71'  # Green for clean
-                
-                # Get detection count if available
-                detection_count = 'N/A'
-                if 'vt_data' in details and details['vt_data'] and 'last_analysis_stats' in details['vt_data']:
-                    stats = details['vt_data']['last_analysis_stats']
-                    malicious = stats.get('malicious', 0)
-                    suspicious = stats.get('suspicious', 0)
-                    detection_count = malicious + suspicious
-                
-                timeline_data.append({
-                    'date': submission_date,
-                    'hash': short_hash,
-                    'full_hash': hash_value,
-                    'color': color,
-                    'source': source,
-                    'detection_count': detection_count
-                })
-        
-        if not timeline_data:
-            return "document.getElementById('timeline_chart').innerHTML = 'No timeline data available';"
-        
-        # Sort by date
-        timeline_data.sort(key=lambda x: x['date'])
-        
-        # Create a scatter plot for the timeline
-        fig = go.Figure()
-        
-        # Add scatter trace for timeline
-        fig.add_trace(go.Scatter(
-            x=[d['date'] for d in timeline_data],
-            y=[1 for _ in timeline_data],  # All points on same level
-            mode='markers',
-            marker=dict(
-                color=[d['color'] for d in timeline_data],
-                size=12,
-                line=dict(width=1, color='DarkSlateGrey')
-            ),
-            text=[f"Hash: {d['hash']}<br>First seen: {d['date'].strftime('%Y-%m-%d')}<br>Source: {d['source']}<br>Detections: {d['detection_count']}" 
-                  for d in timeline_data],
-            hoverinfo='text',
-            name='Samples'
-        ))
-        
-        # Update layout for timeline
-        fig.update_layout(
-            title='Sample Timeline',
-            xaxis_title='First Submission Date',
-            yaxis=dict(
-                showticklabels=False,
-                showgrid=False,
-                zeroline=False,
-            ),
-            hovermode='closest',
-            showlegend=False,
-            margin=dict(l=50, r=50, t=80, b=50),
-            height=350
-        )
-        
-        # Add custom shapes for timeline line
-        if len(timeline_data) > 1:
-            fig.add_shape(
-                type="line",
-                x0=timeline_data[0]['date'],
-                y0=1,
-                x1=timeline_data[-1]['date'],
-                y1=1,
-                line=dict(
-                    color="RoyalBlue",
-                    width=2,
-                    dash="solid",
-                ),
-            )
-        
-        # Convert to HTML
-        chart_js = f"""
-        <script>
-            var timeline_data = {pio.to_json(fig)};
-            Plotly.newPlot('timeline_chart', timeline_data.data, timeline_data.layout);
-            
-            // Add click event for hash navigation
-            document.getElementById('timeline_chart').on('plotly_click', function(data) {{
-                var hash_idx = data.points[0].pointIndex;
-                var hash_list = {json.dumps([d['full_hash'] for d in timeline_data])};
-                var hash_id = hash_list[hash_idx];
-                var element = document.getElementById(hash_id);
-                if (element) {{
-                    element.scrollIntoView({{ behavior: 'smooth' }});
-                }}
-            }});
         </script>
         """
         
@@ -653,7 +581,6 @@ class HTMLReporter:
         # Generate charts
         detection_chart_js = self.create_detection_chart(results)
         distribution_chart_js = self.create_distribution_chart(results)
-        timeline_chart_js = self.create_timeline_chart(results)
         tags_chart_js = self.create_tags_chart(results)
         
         # Calculate summary statistics
@@ -681,11 +608,10 @@ class HTMLReporter:
             vx_not_found=vx_not_found,
             with_vt_data=with_vt_data,
             most_common_tags=most_common_tags,
-            timestamp=datetime.now().strftime('%d-%m-%Y %H:%M:%S'),  # British date format
+            timestamp=datetime.now().strftime('%Y-%m-%d'),  # Changed to YYYY-MM-DD format
             current_year=datetime.now().year,
             detection_chart_js=detection_chart_js,
             distribution_chart_js=distribution_chart_js,
-            timeline_chart_js=timeline_chart_js,
             tags_chart_js=tags_chart_js
         )
         

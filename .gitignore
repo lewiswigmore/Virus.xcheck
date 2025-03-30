@@ -1,29 +1,17 @@
-# Environment variables
-.env
-
-# Testing files
-tests/
-test_*
-
-# Python virtual environment
+# Ignore virtual environment directories and files
 Lib/
 Scripts/
+share/
+tests/
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
 
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
+# Ignore test scripts
+test_*.py
 
-# IDE files
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Output files
-*.csv
-*.json
-!requirements.txt
+# Ignore test output files
+test_*.html
+test_*.pdf
+test_*.csv
+test_*.json
+test_*.txt

@@ -1,0 +1,29 @@
+# Environment variables
+.env
+
+# Testing files
+tests/
+test_*
+
+# Python virtual environment
+Lib/
+Scripts/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Output files
+*.csv
+*.json
+!requirements.txt

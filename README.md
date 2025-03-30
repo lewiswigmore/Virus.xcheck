@@ -15,76 +15,119 @@
 Virus.xcheck is a Python tool designed to check the existence of file hashes in the Virus Exchange database. Due to the storage method used by Virus Exchange, only SHA-256 hashes are supported. However, for other hash types, the tool will return a VirusTotal URL. The tool can read SHA-256 hashes from a CSV file or accept a single hash from the command line, verifying each one against the Virus Exchange database.
 
 ## Features
-- Reads hashes from a CSV file or a single hash from the command line.
-- Checks each hash against the Virus Exchange database.
-- Parallel processing for handling of larger files.
-- Outputs the results in JSON or CSV format.
-- Command-line interface with multiple usage options.
-- Checks are rate limited to 15 requests per second.
+- Reads hashes from a CSV file or a single hash from the command line
+- Checks each hash against the Virus Exchange API with S3 bucket fallback
+- Parallel processing for efficient handling of larger files
+- Colorized, beautifully formatted output in the terminal
+- Outputs the results in JSON or CSV format
+- Command-line interface with multiple options
+- API key management with .env file support
+- Rate limiting to prevent API throttling
 
 ## Requirements
-- Python 3
-- Libraries: `requests`, `tqdm`, `ratelimit`
+- Python 3.6+
 
 ## Installation
-Ensure Python 3 is installed on your system. Install the required libraries using pip:
+
+### Using pip
+Install the required packages using the provided requirements.txt file:
 
 ```bash
-pip install requests tqdm ratelimit
+pip install -r requirements.txt
 ```
+
+### API Key Setup
+1. Get an API key from [Virus.Exchange](https://virus.exchange/)
+2. Create a `.env` file in the root directory with your API key:
+   ```
+   VIRUSXCHECK_API_KEY=your_api_key_here
+   ```
+   Alternatively, you can provide the API key via command line:
+   ```bash
+   python virusxcheck.py -s "hash_value" -k "your_api_key_here" --save-config
+   ```
+   The `--save-config` option will save the API key to the .env file for future use.
 
 ## Usage
-Getting started and usage guide:
+Execute the script from the command line with the following options:
 
-```bash
-python virusxcheck.py
-```
-
-Execute the script from the command line with the following format:
-
-```bash
-python virusxcheck.py -f /path/to/your/hashes.csv
-```
-
-To save the output in a custom-named CSV file:
-
-```bash
-python virusxcheck.py -f /path/to/hashes.csv -o /path/to/custom_output.csv
-```
-
-To check a single hash:
-
+### Check a single hash
 ```bash
 python virusxcheck.py -s "hash_value"
 ```
 
-### Arguments
-- `-f` or `--file`: Path to the CSV file containing hashes.
-- `-o` or `--output`: Path to the output file (CSV or JSON format).
-- `-s` or `--single`: Single hash string to check.
+### Process multiple hashes from a CSV file
+```bash
+python virusxcheck.py -f /path/to/your/hashes.csv
+```
 
-### Output
-The tool outputs the results in either JSON or CSV format, where each hash is mapped to its status ('Found' or 'Not Found') and the corresponding download URL if found.
+### Save results to a file
+```bash
+python virusxcheck.py -f /path/to/hashes.csv -o /path/to/results.csv
+python virusxcheck.py -s "hash_value" -o /path/to/results.json
+```
 
-You can specify the output format (JSON or CSV) using the -o option followed by the desired file extension:
-- JSON: `-o output.json`
-- CSV: `-o output.csv`
+### Disable colored output
+```bash
+python virusxcheck.py -s "hash_value" --no-color
+```
 
-Example output (JSON):
+## Command-Line Arguments
+- `-s, --single`: Single hash string to check
+- `-f, --file`: Path to CSV file containing hashes
+- `-o, --output`: Path to output file (CSV or JSON format)
+- `-k, --apikey`: Virus.Exchange API key
+- `--save-config`: Save API key to .env file
+- `--no-color`: Disable colored output
 
+## Output Formats
+
+### Terminal Output
+The tool produces beautifully formatted and colored output in the terminal:
+- Red for malicious files found in the database
+- Green for clean files not found
+- Yellow for warnings and errors
+- Comprehensive metadata display with file information, names, tags, and links
+
+### JSON Output
 ```json
 {
-    "123ab456c7891011d1213e14f1g516h1718i1jk9202mn12223o2p42qe5s26t27": {
-        "status": "Not found in VX database",
-        "virustotal_url": "https://www.virustotal.com/gui/file/123ab456c7891011d1213e14f1g516h1718i1jk9202mn12223o2p42qe5s26t2"        
-    },
-    "199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42": {
+    "dbd5e933fe023ee03953ed8a8997c58be05ba97c092b795647962cf111bcd540": {
         "status": "Found in VX database",
-        "vx_url": "https://s3.us-east-1.wasabisys.com/vxugmwdb/199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42",       
-        "virustotal_url": "https://www.virustotal.com/gui/file/199ab829c3280509d9842e31f9g024h6254i2jk19l4mn44603o3p25qe1s74t42"
+        "details": {
+            "md5": "d51c19925a2ae853d3b19a1259f86de5",
+            "size": 4042752,
+            "type": "unknown",
+            "names": [
+                "csrss.exe",
+                "app.exe"
+            ],
+            "sha1": "332a18521f2905e233bbab094a021cee44ac750e",
+            "tags": [
+                "spreader",
+                "peexe",
+                "executable",
+                "windows"
+            ],
+            "first_seen": "2025-03-30T17:36:55Z",
+            "download_link": "https://s3.us-east-1.wasabisys.com/vxugmwdb/dbd5e933fe023ee03953ed8a8997c58be05ba97c092b795647962cf111bcd540"
+        },
+        "virustotal_url": "https://www.virustotal.com/gui/file/dbd5e933fe023ee03953ed8a8997c58be05ba97c092b795647962cf111bcd540"
     }
 }
 ```
 
+### CSV Output
+The CSV output includes columns for:
+- Hash
+- VX Status
+- File Type
+- Size
+- First Seen
+- Names
+- VX URL
+- Download Link
+- VirusTotal URL
+
 ## Disclaimer
-This tool is for informational purposes only. Ensure you have the right to access and check the hashes against the database and always comply with the terms of service of the website.
+This tool is for informational purposes only. Ensure you have the right to access and check the hashes against the database and always comply with the terms of service of the Virus Exchange API.

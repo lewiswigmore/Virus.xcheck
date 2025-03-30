@@ -37,6 +37,13 @@ from datetime import datetime
 from tabulate import tabulate
 from dotenv import load_dotenv
 
+# Import the HTML reporter
+try:
+    from html_reporter import generate_html_report
+    HTML_REPORTER_AVAILABLE = True
+except ImportError:
+    HTML_REPORTER_AVAILABLE = False
+
 # Initialize colorama for cross-platform colored terminal text
 colorama.init(autoreset=True)
 
@@ -559,6 +566,9 @@ def main():
         parser.add_argument('--save-config', action='store_true', help='Save API keys to .env file')
         parser.add_argument('--no-color', action='store_true', help='Disable colored output')
         
+        # New report options
+        parser.add_argument('--html', help='Generate HTML report with interactive charts')
+        
         # Parse args with stderr still redirected to null_device
         args = parser.parse_args(args_copy[1:])
         
@@ -627,8 +637,22 @@ def main():
         except KeyboardInterrupt:
             print(f"\n{Fore.YELLOW}Operation cancelled by user. Exiting.{Style.RESET_ALL}")
             sys.exit(0)
+            
+        # Generate HTML report if requested
+        if args.html:
+            if not HTML_REPORTER_AVAILABLE:
+                print(f"{Fore.RED}Error: HTML report generation requires additional dependencies. Please install them using:")
+                print(f"pip install jinja2 plotly pandas{Style.RESET_ALL}")
+                if not args.output: # Only exit if this is the only output
+                    sys.exit(1)
+            else:
+                try:
+                    html_file = generate_html_report(results, args.html)
+                    print(f"{Fore.GREEN}HTML report saved to {html_file}{Style.RESET_ALL}")
+                except Exception as e:
+                    print(f"{Fore.RED}Error generating HTML report: {e}{Style.RESET_ALL}")
 
-        # Output results
+        # Output raw results
         if args.output:
             file_extension = args.output.split('.')[-1].lower()
             if file_extension == 'csv':
@@ -640,8 +664,8 @@ def main():
             else:
                 print(f"{Fore.RED}Error: Output file must have a .csv or .json extension{Style.RESET_ALL}")
                 exit(1)
-        else:
-            # Pretty print the results to the console
+        elif not (args.html):
+            # Only pretty print if no other output format is requested
             pretty_print_results(results)
 
     finally:

@@ -3,6 +3,7 @@ Lib/
 Scripts/
 share/
 tests/
+test_*/
 __pycache__/
 *.pyc
 

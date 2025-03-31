@@ -8,7 +8,7 @@
 ```
 <p align="left">
       <a href="https://github.com/lewiswigmore"><img src="https://img.shields.io/badge/GitHub-Follow%20on%20GitHub-inactive.svg?logo=github"></a>
-      <a href="https://twitter.com/lewiswigmore"><img src="https://img.shields.io/badge/Twitter-Follow%20on%20Twitter-informational.svg?logo=x"></a>
+      <a href="https://twitter.com/0xlews"><img src="https://img.shields.io/badge/Twitter-Follow%20on%20Twitter-informational.svg?logo=x"></a>
 </p>
  
 ## Overview

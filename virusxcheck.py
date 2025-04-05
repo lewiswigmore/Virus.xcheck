@@ -5,23 +5,20 @@
 ██║   ██║██║██████╔╝██║   ██║███████╗    ╚███╔╝ ██║     ███████║█████╗  ██║     █████╔╝ 
 ╚██╗ ██╔╝██║██╔══██╗██║   ██║╚════██║    ██╔██╗ ██║     ██╔══██║██╔══╝  ██║     ██╔═██╗ 
  ╚████╔╝ ██║██║  ██║╚██████╔╝███████║██╗██╔╝ ██╗╚██████╗██║  ██║███████╗╚██████╗██║  ██╗
-  ╚═══╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝
+  ╚═══╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝
                                                                                         
 """
 
-# Suppress all Python warnings and informational messages
 import os
 import sys
 import warnings
 
-# Completely disable warnings and redirect stderr before importing other modules
 warnings.filterwarnings("ignore")
-# Create a null device to suppress stderr
+# Suppress stderr output to avoid clutter
 original_stderr = sys.stderr
 null_device = open(os.devnull, 'w')
 sys.stderr = null_device
 
-# Now import the rest of the modules
 import csv
 import requests
 import argparse
@@ -37,31 +34,30 @@ from datetime import datetime
 from tabulate import tabulate
 from dotenv import load_dotenv
 
-# Import the HTML reporter
+# Try to import HTML reporter, but don't crash if it's not available
 try:
     from html_reporter import generate_html_report
     HTML_REPORTER_AVAILABLE = True
 except ImportError:
     HTML_REPORTER_AVAILABLE = False
 
-# Initialize colorama for cross-platform colored terminal text
+# Setup colorama for cross-platform colored terminal output
 colorama.init(autoreset=True)
 
-# Configuration settings
+# API endpoints
 API_BASE_URL = "https://virus.exchange/api"
 VT_API_BASE_URL = "https://www.virustotal.com/api/v3"
 
-# Load environment variables from .env file
+# Load API keys from .env file
 load_dotenv()
 
-# Get API keys from environment variables or command line
 DEFAULT_API_KEY = os.getenv("VIRUSXCHECK_API_KEY", "")
 DEFAULT_VT_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "")
 
 def read_csv(file_path):
-    """Read hashes from a CSV file"""
+    # Extract SHA256 hashes from a CSV file using regex
     hashes = []
-    hex_pattern = re.compile(r'\b[a-fA-F0-9]{64}\b')  # Regex pattern for SHA256
+    hex_pattern = re.compile(r'\b[a-fA-F0-9]{64}\b')  # Pattern to match SHA256
     try:
         with open(file_path, mode='r', newline='', encoding='utf-8') as file:
             reader = csv.reader(file)
@@ -87,7 +83,7 @@ class VirusExchangeAPI:
     @sleep_and_retry
     @limits(calls=15, period=1)
     def get_sample_details(self, sha256_hash):
-        """Get sample details using the Virus.Exchange API"""
+        # Get sample details from the Virus.Exchange API
         url = f"{API_BASE_URL}/samples/{sha256_hash}"
         try:
             response = self.session.get(url)
@@ -114,7 +110,7 @@ class VirusExchangeAPI:
             }
     
     def fallback_check(self, sha256_hash):
-        """Fallback to the old method if API fails"""
+        # Fallback method to check S3 bucket directly if the API fails
         vx_url = f"https://s3.us-east-1.wasabisys.com/vxugmwdb/{sha256_hash}"
         virustotal_url = f"https://www.virustotal.com/gui/file/{sha256_hash}"
         
@@ -155,14 +151,14 @@ class VirusTotalAPI:
     @sleep_and_retry
     @limits(calls=4, period=60)  # VT API rate limits: 4 requests per minute for standard API keys
     def get_file_report(self, file_hash):
-        """Get file report using the VirusTotal API"""
+        # Get detailed file information from the VirusTotal API
         if not self.api_key:
             return None
             
         url = f"{VT_API_BASE_URL}/files/{file_hash}"
         try:
             response = self.session.get(url)
-            if response.status_code == 200:
+            if (response.status_code == 200):
                 return response.json()
             elif response.status_code == 404:
                 return {"error": "File not found on VirusTotal"}
@@ -172,7 +168,7 @@ class VirusTotalAPI:
             return {"error": f"Request Error: {e}"}
     
     def extract_scan_results(self, vt_data):
-        """Extract relevant information from VirusTotal API response"""
+        # Pull out the important bits from the VirusTotal API response
         if not vt_data or "error" in vt_data:
             return vt_data
             
@@ -209,7 +205,7 @@ class VirusTotalAPI:
             return {"error": f"Error parsing VirusTotal data: {str(e)}"}
 
 def check_hash(hash_value, api, vt_api=None):
-    """Check a hash using the Virus.Exchange API with fallback and VirusTotal lookup"""
+    # Checks a hash using the Virus.Exchange API with fallback and VirusTotal lookup if available
     result = {}
     
     # Validate hash length and type
@@ -255,7 +251,7 @@ def check_hash(hash_value, api, vt_api=None):
         return {"status": "Invalid hash length", "virustotal_url": None}
 
 def write_to_csv(file_path, data):
-    """Write results to a CSV file with enhanced metadata including VirusTotal results"""
+    # Export results to a CSV file with all the metadata we've collected
     with open(file_path, 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         # Enhanced headers including VirusTotal data
@@ -329,12 +325,12 @@ def write_to_csv(file_path, data):
             ])
 
 def write_to_json(file_path, data):
-    """Write results to a JSON file"""
+    # Save all the collected data in a nicely formatted JSON file
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4)
 
 def pretty_print_results(results):
-    """Print results with nice formatting and colors"""
+    # Format and display the results with nice colors and clear organization
     print()
     print(f"{Fore.CYAN}{'═'*80}{Style.RESET_ALL}")
     print(f"{Fore.CYAN}{Style.BRIGHT}{'VIRUS.XCHECK RESULTS':^80}{Style.RESET_ALL}")
@@ -486,7 +482,7 @@ def pretty_print_results(results):
         print(f"{Fore.CYAN}{'─'*80}{Style.RESET_ALL}\n")
 
 def update_env_file(api_key):
-    """Update the .env file with a new API key"""
+    # Saves a new API key to the .env file for future use
     env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
     
     # Read existing content
@@ -517,7 +513,7 @@ def update_env_file(api_key):
         f.writelines(content)
 
 def update_env_file_multiple(env_content):
-    """Update the .env file with multiple API keys"""
+    # Batch updates to the .env file with multiple API keys
     env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
     
     # Read existing content

@@ -12,7 +12,7 @@ from plotly.subplots import make_subplots
 from jinja2 import Environment, FileSystemLoader
 from datetime import datetime
 
-# Define the HTML template
+# Define HTML template
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html>
 <head>

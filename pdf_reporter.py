@@ -1,6 +1,5 @@
 """
-PDF Report Generator for Virus.xcheck
-This module generates professional PDF reports with scan results
+PDF Report Generator module for Virus.xcheck
 """
 
 import os
@@ -15,34 +14,26 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, mm
 
 
-class VirusXcheckPDF(FPDF):
-    """Custom PDF class with headers and footers"""
-    
+class VirusXcheckPDF(FPDF):   
     def __init__(self):
         super().__init__()
         self.WIDTH = 210
         self.HEIGHT = 297
         
     def header(self):
-        """Create header with logo and title"""
-        # Logo (if exists)
         logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logo.png')
         if os.path.exists(logo_path):
             self.image(logo_path, 10, 8, 33)
             self.set_font('helvetica', 'B', 20)
-            self.cell(40)  # Move to the right of the logo
+            self.cell(40)
         else:
             self.set_font('helvetica', 'B', 20)
-            
         # Title
-        self.set_text_color(45, 62, 80)  # Dark blue color
+        self.set_text_color(45, 62, 80)  # Dark blue
         self.cell(130, 10, 'Virus.xcheck Malware Analysis Report', 0, 1, 'C')
-        
         # Timestamp
         self.set_font('helvetica', 'I', 10)
         self.cell(0, 10, f'Generated on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', 0, 0, 'R')
-        
-        # Line break
         self.ln(20)
         
     def footer(self):
@@ -55,24 +46,19 @@ class VirusXcheckPDF(FPDF):
 
 
 class PDFReporter:
-    """Creates professional PDF reports from hash analysis results"""
-    
     def __init__(self):
-        """Initialize the PDF reporter"""
         self.pdf = VirusXcheckPDF()
         self.pdf.set_auto_page_break(auto=True, margin=15)
         self.pdf.add_page()
         self.pdf.alias_nb_pages()
         
     def add_summary_section(self, results):
-        """Add summary section with statistics"""
         # Calculate summary statistics
         total_hashes = len(results)
         vx_found = sum(1 for details in results.values() if 'Found in VX database' in details['status'])
         vx_not_found = total_hashes - vx_found
         with_vt_data = sum(1 for details in results.values() 
                           if 'vt_data' in details and details['vt_data'] and 'error' not in details['vt_data'])
-        
         # Detection statistics
         malicious_count = 0
         suspicious_count = 0
@@ -86,14 +72,12 @@ class PDFReporter:
                 suspicious_count += stats.get('suspicious', 0)
                 clean_count += stats.get('undetected', 0)
                 total_samples += 1
-        
-        # Add summary heading
+                
         self.pdf.set_font('helvetica', 'B', 16)
         self.pdf.set_text_color(45, 62, 80)
         self.pdf.cell(0, 10, 'Analysis Summary', 0, 1, 'L')
         self.pdf.ln(2)
         
-        # Summary text
         self.pdf.set_font('helvetica', '', 10)
         self.pdf.set_text_color(0, 0, 0)
         self.pdf.cell(0, 6, f'Total hashes analyzed: {total_hashes}', 0, 1)
@@ -102,7 +86,6 @@ class PDFReporter:
         self.pdf.cell(0, 6, f'With VirusTotal data: {with_vt_data}', 0, 1)
         self.pdf.ln(5)
         
-        # Add detection statistics if available
         if total_samples > 0:
             self.pdf.set_font('helvetica', 'B', 12)
             self.pdf.cell(0, 8, 'Detection Statistics', 0, 1, 'L')
@@ -111,11 +94,11 @@ class PDFReporter:
             self.pdf.set_font('helvetica', '', 10)
             self.pdf.cell(0, 6, f'Average detections per sample: {malicious_count / total_samples:.1f}', 0, 1)
             
-            # Create a detection summary table
+            # detection summary table
             self.pdf.set_draw_color(45, 62, 80)
             self.pdf.set_line_width(0.3)
             
-            # Table header
+            # header
             self.pdf.set_font('helvetica', 'B', 10)
             self.pdf.set_fill_color(240, 240, 240)
             self.pdf.cell(50, 8, 'Category', 1, 0, 'C', True)
@@ -150,20 +133,19 @@ class PDFReporter:
         self.pdf.ln(8)
 
     def add_detailed_results(self, results):
-        """Add detailed results for each hash"""
+        # detailed results for each hash
         # Section header
         self.pdf.set_font('helvetica', 'B', 16)
         self.pdf.set_text_color(45, 62, 80)
         self.pdf.cell(0, 10, 'Detailed Results', 0, 1, 'L')
         self.pdf.ln(2)
         
-        # For each hash
         for hash_value, details in results.items():
-            # Check if we need a new page
+            # Check if need a new page
             if self.pdf.get_y() > 240:
                 self.pdf.add_page()
             
-            # Hash header with status color
+            # Hash header 
             self.pdf.set_font('helvetica', 'B', 12)
             if 'Found in VX database' in details['status']:
                 self.pdf.set_text_color(231, 76, 60)  # Red for malicious
@@ -236,19 +218,16 @@ class PDFReporter:
                     self.pdf.set_font('helvetica', 'B', 10)
                     self.pdf.cell(20, 6, 'Tags:', 0, 0)
                     self.pdf.set_font('helvetica', '', 9)
-                    
-                    # Format tags with commas
                     tags_text = ', '.join(vt_data['tags'][:10])
                     if len(vt_data['tags']) > 10:
                         tags_text += f" (+ {len(vt_data['tags']) - 10} more)"
                         
                     self.pdf.multi_cell(0, 6, tags_text)
-            
             # Links
             self.pdf.set_font('helvetica', 'B', 10)
             self.pdf.cell(20, 6, 'Links:', 0, 0)
             self.pdf.set_font('helvetica', '', 9)
-            self.pdf.set_text_color(52, 152, 219)  # Blue for links
+            self.pdf.set_text_color(52, 152, 219)  # Blue 
             
             if 'virustotal_url' in details:
                 self.pdf.cell(0, 6, 'VirusTotal', 0, 1, 'L', False, details['virustotal_url'])
@@ -257,29 +236,18 @@ class PDFReporter:
                 self.pdf.cell(20, 6, '', 0, 0)
                 self.pdf.cell(0, 6, 'Download Sample', 0, 1, 'L', False, details['details']['download_link'])
             
-            # Reset text color
-            self.pdf.set_text_color(0, 0, 0)
-            
-            # Add line break between entries
+            self.pdf.set_text_color(0, 0, 0) # reset text color
             self.pdf.ln(5)
             self.pdf.line(10, self.pdf.get_y(), 200, self.pdf.get_y())
             self.pdf.ln(8)
     
     def generate_report(self, results, output_file):
-        """Generate the full PDF report"""
-        # Add summary section
+        # Generate the PDF report
         self.add_summary_section(results)
-        
-        # Add detailed results
         self.add_detailed_results(results)
-        
-        # Save the PDF
         self.pdf.output(output_file)
         return output_file
 
-
-# Function to use from main application
 def generate_pdf_report(results, output_file):
-    """Generate a PDF report from results"""
     reporter = PDFReporter()
     return reporter.generate_report(results, output_file)

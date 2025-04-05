@@ -6,6 +6,7 @@ tests/
 __pycache__/
 *.pyc
 *.env
+.env
 test_*/
 
 # Ignore test scripts
